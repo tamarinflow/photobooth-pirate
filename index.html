@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trouve ton Ancêtre Pirate</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏴‍☠️</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- SCREEN 1: Sélection invité -->
+        <section id="screenSelect" class="screen active">
+            <div class="screen-inner">
+                <div class="hero">
+                    <div class="skull-icon">☠️</div>
+                    <h1>Trouve ton<br><span class="gold">Ancêtre Pirate</span></h1>
+                    <p class="tagline">Anniversaire du Capitaine Nathan, 14 mars</p>
+                </div>
+
+                <div class="card">
+                    <label for="guestSelect" class="card-label">Qui es-tu, moussaillon ?</label>
+                    <select id="guestSelect">
+                        <option value="" disabled selected>Choisis ton nom...</option>
+                    </select>
+                    <div id="guestPreview" class="guest-preview hidden">
+                        <div class="guest-joke" id="guestJoke"></div>
+                    </div>
+                </div>
+
+                <button id="btnNext" class="btn-primary" disabled>
+                    <span>Découvrir mon ancêtre</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: Photo + Transformation -->
+        <section id="screenPhoto" class="screen">
+            <div class="screen-inner">
+                <button id="btnBack" class="btn-back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    <span>Retour</span>
+                </button>
+
+                <div class="photo-header">
+                    <h2 id="photoTitle">Ton portrait, <span class="gold" id="photoName"></span></h2>
+                    <p class="subtitle">Prends-toi en photo pour découvrir ton ancêtre</p>
+                </div>
+
+                <div class="photo-zone">
+                    <!-- Upload state -->
+                    <div id="uploadZone" class="upload-zone">
+                        <div class="upload-icon">📸</div>
+                        <p class="upload-text">Prends un selfie ou choisis une photo</p>
+                        <input type="file" id="photoInput" accept="image/*" capture="user">
+                        <button id="btnUpload" class="btn-secondary">Choisir une photo</button>
+                    </div>
+
+                    <!-- Preview state -->
+                    <div id="previewZone" class="preview-zone hidden">
+                        <div class="photo-frame">
+                            <img id="originalPhoto" alt="Ta photo">
+                        </div>
+                        <button id="btnTransform" class="btn-primary btn-transform">
+                            <span id="transformText">Révéler mon ancêtre pirate</span>
+                            <div id="transformLoader" class="loader hidden"></div>
+                        </button>
+                        <button id="btnRetake" class="btn-ghost">Reprendre la photo</button>
+                    </div>
+
+                    <!-- Result state -->
+                    <div id="resultZone" class="result-zone hidden">
+                        <div class="result-comparison">
+                            <div class="result-card">
+                                <div class="result-label">Toi</div>
+                                <div class="photo-frame small">
+                                    <img id="resultOriginal" alt="Original">
+                                </div>
+                            </div>
+                            <div class="result-arrow">→</div>
+                            <div class="result-card">
+                                <div class="result-label">Ton ancêtre</div>
+                                <div class="photo-frame small pirate-frame">
+                                    <img id="resultPirate" alt="Ancêtre pirate">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ancestor-info">
+                            <h3 id="ancestorName" class="ancestor-name"></h3>
+                            <p id="ancestorDesc" class="ancestor-desc"></p>
+                        </div>
+                        <div class="result-actions">
+                            <button id="btnDownload" class="btn-primary">Télécharger</button>
+                            <button id="btnShare" class="btn-secondary">Partager</button>
+                        </div>
+                        <button id="btnNewPhoto" class="btn-ghost">Nouvelle photo</button>
+                    </div>
+                </div>
+
+                <!-- Mutiny section -->
+                <div class="mutiny-section" id="mutinySection">
+                    <div class="mutiny-divider">
+                        <span>☠️</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="mutiny-title">Mutinerie Collective</h3>
+                    <p class="mutiny-subtitle" id="mutinySubtitle">Le capitaine est trop gourmand ? Rallie l'equipage !</p>
+
+                    <!-- Skull lantern progress: 8 skulls -->
+                    <div class="skull-row" id="skullRow">
+                        <div class="skull-lantern" data-index="0"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="1"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="2"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="3"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="4"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="5"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="6"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                        <div class="skull-lantern" data-index="7"><span class="skull-flame"></span><span class="skull-glyph">&#9760;</span></div>
+                    </div>
+                    <p class="skull-counter" id="skullCounter">0 / 8 mutins</p>
+
+                    <!-- Fuse line connecting skulls to cannon -->
+                    <div class="fuse-track">
+                        <div class="fuse-fill" id="fuseFill"></div>
+                        <div class="fuse-spark" id="fuseSpark"></div>
+                    </div>
+
+                    <!-- CTA button: changes per state -->
+                    <button id="btnMutiny" class="btn-mutiny">
+                        <span class="btn-mutiny-inner">
+                            <span class="mutiny-icon">&#9876;</span>
+                            <span class="mutiny-label" id="mutinyLabel">Rejoindre la mutinerie</span>
+                        </span>
+                        <span class="btn-mutiny-ripple"></span>
+                    </button>
+
+                    <!-- Already voted state -->
+                    <div id="mutinyVoted" class="mutiny-voted hidden">
+                        <div class="voted-badge">
+                            <span class="voted-icon">&#9876;</span>
+                            <span class="voted-text">Tu as prete serment</span>
+                        </div>
+                        <p class="voted-hint">En attente des autres mutins...</p>
+                    </div>
+
+                    <!-- Crew roster: who has joined -->
+                    <div class="crew-roster" id="crewRoster"></div>
+
+                    <!-- Launch overlay (full-screen) -->
+                    <div id="mutinyOverlay" class="mutiny-overlay hidden">
+                        <div class="overlay-content">
+                            <div class="cannon-flash"></div>
+                            <div class="overlay-skull">&#9760;</div>
+                            <h2 class="overlay-title">MUTINERIE<br>REUSSIE</h2>
+                            <p class="overlay-sub">Le capitaine est renverse !</p>
+                            <div class="overlay-reward">
+                                <p class="reward-text">Montre ceci a Nathan pour une biere offerte</p>
+                                <p class="reward-code" id="rewardCode">Code : "Il est important de noter que..."</p>
+                            </div>
+                            <button id="btnOverlayClose" class="btn-overlay-close">Fermer</button>
+                        </div>
+                    </div>
+
+                    <!-- Post-launch trophy -->
+                    <div id="mutinyTrophy" class="mutiny-trophy hidden">
+                        <div class="trophy-card">
+                            <div class="trophy-skull">&#9760;</div>
+                            <h3 class="trophy-title">Mutinerie accomplie</h3>
+                            <p class="trophy-reward">Montre ceci a Nathan pour une biere offerte</p>
+                            <p class="trophy-code" id="trophyCode">Code : "Il est important de noter que..."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK (compat for simplicity, no build tools) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="guests.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
