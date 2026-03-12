@@ -10,13 +10,13 @@
 // ══════════════════════════════════════
 
 var FIREBASE_CONFIG = {
-    apiKey:            "PASTE_YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT.firebaseapp.com",
-    databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId:         "YOUR_PROJECT",
-    storageBucket:     "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId:             "YOUR_APP_ID"
+    apiKey:            "AIzaSyCedAd2j2o98LyiU4i0hkk7LHiRVVGn2mE",
+    authDomain:        "photobooth-pirate.firebaseapp.com",
+    databaseURL:       "https://photobooth-pirate-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:         "photobooth-pirate",
+    storageBucket:     "photobooth-pirate.firebasestorage.app",
+    messagingSenderId: "162341012907",
+    appId:             "1:162341012907:web:a17885deab0bb7b60e3eee"
 };
 
 // Set to false to use localStorage fallback (offline mode)
