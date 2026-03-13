@@ -312,18 +312,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function uploadToFal(blob, apiKey) {
-        var formData = new FormData();
-        formData.append('file', blob, 'photo.jpg');
-
-        var resp = await fetch('https://fal.run/fal-ai/workflows/upload', {
+        // Step 1: Get CDN auth token
+        var tokenResp = await fetch('https://rest.fal.ai/storage/auth/token', {
             method: 'POST',
-            headers: { 'Authorization': 'Key ' + apiKey },
-            body: formData
+            headers: {
+                'Authorization': 'Key ' + apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ storage_type: 'fal-cdn-v3' })
         });
+        if (!tokenResp.ok) throw new Error('CDN auth failed');
+        var tokenData = await tokenResp.json();
 
-        if (!resp.ok) throw new Error('Upload failed');
-        var data = await resp.json();
-        return data.url;
+        // Step 2: Upload file with CDN token
+        var uploadResp = await fetch('https://v3.fal.media/files/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + tokenData.token,
+                'Content-Type': blob.type || 'image/jpeg',
+                'X-Fal-File-Name': 'photo.jpg'
+            },
+            body: blob
+        });
+        if (!uploadResp.ok) throw new Error('Upload failed');
+        var data = await uploadResp.json();
+        return data.access_url;
     }
 
     async function pollFalResult(requestId, apiKey) {
