@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                image_urls: [uploadUrl],
+                image_url: uploadUrl,
                 prompt: buildPiratePrompt(guest),
                 num_images: 1,
                 resolution: '2K',
@@ -306,6 +306,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         transformText.textContent = 'Le peintre travaille...';
         var result = await response.json();
+        
+        // Check if this is an async job (has status_url)
+        if (result.status_url && result.response_url) {
+            // Async job - poll for result
+            return await pollFalResult(result.status_url, result.response_url, apiKey);
+        }
+        
+        // Sync response - return directly
         return (result.images && result.images[0] && result.images[0].url) || (result.image && result.image.url);
     }
 
