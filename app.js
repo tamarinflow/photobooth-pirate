@@ -230,18 +230,19 @@ document.addEventListener('DOMContentLoaded', function () {
         var blob = dataUrlToBlob(imageDataUrl);
         var uploadUrl = await uploadToFal(blob, apiKey);
 
-        var response = await fetch('https://queue.fal.run/fal-ai/banana-pro-2', {
+        var response = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit', {
             method: 'POST',
             headers: {
                 'Authorization': 'Key ' + apiKey,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                image_url: uploadUrl,
-                prompt: 'Transform this portrait photo into an 18th century pirate captain painting. Oil painting style, dramatic lighting, pirate hat, weathered face, ocean background. The person should look like ' + guest.pirateName + ', a legendary pirate. Keep the facial features recognizable.',
-                negative_prompt: 'blurry, low quality, deformed, cartoon, anime, modern clothes',
-                num_inference_steps: 30,
-                guidance_scale: 7.5
+                image_urls: [uploadUrl],
+                prompt: 'Transform this portrait photo into an 18th century pirate captain oil painting. Keep the person\'s facial features clearly recognizable. Add a weathered pirate tricorn hat, dramatic chiaroscuro lighting, ocean and ship background. The person should look like ' + guest.pirateName + ', a legendary pirate captain. Painterly brushstrokes, rich warm colors, museum-quality portrait.',
+                num_images: 1,
+                resolution: '1K',
+                output_format: 'png',
+                safety_tolerance: '4'
             })
         });
 
@@ -279,13 +280,13 @@ document.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < maxAttempts; i++) {
             await sleep(2000);
 
-            var resp = await fetch('https://queue.fal.run/fal-ai/banana-pro-2/requests/' + requestId + '/status', {
+            var resp = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit/requests/' + requestId + '/status', {
                 headers: { 'Authorization': 'Key ' + apiKey }
             });
             var status = await resp.json();
 
             if (status.status === 'COMPLETED') {
-                var resultResp = await fetch('https://queue.fal.run/fal-ai/banana-pro-2/requests/' + requestId, {
+                var resultResp = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit/requests/' + requestId, {
                     headers: { 'Authorization': 'Key ' + apiKey }
                 });
                 var result = await resultResp.json();
