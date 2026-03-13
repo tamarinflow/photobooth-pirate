@@ -278,7 +278,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var blob = dataUrlToBlob(imageDataUrl);
         var uploadUrl = await uploadToFal(blob, apiKey);
 
-        var response = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit', {
+        transformText.textContent = 'Envoi au peintre...';
+
+        var response = await fetch('https://fal.run/fal-ai/nano-banana-2/edit', {
             method: 'POST',
             headers: {
                 'Authorization': 'Key ' + apiKey,
@@ -302,12 +304,8 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error(err.detail || 'API error: ' + response.status);
         }
 
+        transformText.textContent = 'Le peintre travaille...';
         var result = await response.json();
-
-        if (result.status_url) {
-            return await pollFalResult(result.status_url, result.response_url, apiKey);
-        }
-
         return (result.images && result.images[0] && result.images[0].url) || (result.image && result.image.url);
     }
 
