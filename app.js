@@ -2,6 +2,54 @@
 // PHOTOBOOTH PIRATE — App Logic
 // ══════════════════════════════════════
 
+// ══════════════════════════════════════
+// PROMPT ARCHITECTURE — Pirate Portraits
+// Consistent 17th-18th c. Dutch/Flemish oil painting style
+// across all guests, with per-character injection.
+// ══════════════════════════════════════
+
+function buildPiratePrompt(guest) {
+    var BASE_STYLE = [
+        'Oil portrait painting in the manner of 17th–18th century Dutch and Flemish maritime masters',
+        '(Rembrandt van Rijn, Frans Hals).',
+        'Three-quarter view composition, subject facing slightly left.',
+        'Single-source dramatic side lighting from upper left — strong chiaroscuro,',
+        'deep shadows on the right side of the face.',
+        'Rich dark background with distant stormy sea and ship rigging silhouette.',
+        'Color palette: deep burnt umber, ochre, tobacco brown, warm candlelight highlights on skin.',
+        'Cracked varnish texture suggesting a museum canvas aged 300 years.',
+        'Visible impasto brushwork on highlights, smooth glazes in shadows.'
+    ].join(' ');
+
+    var FACE_LOCK = [
+        'The subject\'s facial features are PRIMARY —',
+        'preserve exact face shape, eye shape, nose, jawline, and skin tone from the source photo.',
+        'This is a portrait of a specific real person; their face must remain clearly recognizable.',
+        'Only add period elements around and above the face. Do not alter facial structure.'
+    ].join(' ');
+
+    var character = (guest.characterPrompt) || (
+        'Subject is ' + guest.pirateName + ', legendary pirate. ' +
+        'Weathered determined expression. Tricorn hat, heavy coat, pistol at belt.'
+    );
+
+    var QUALITY_LOCK = [
+        'Museum-quality oil portrait, highly detailed.',
+        'No cartoon, no illustration, no digital art style.',
+        'Subject fills 70% of frame. Sharp focus on eyes.'
+    ].join(' ');
+
+    return BASE_STYLE + ' ' + FACE_LOCK + ' ' + character + ' ' + QUALITY_LOCK;
+}
+
+var PIRATE_NEGATIVE_PROMPT = [
+    'cartoon, anime, illustration, digital painting, watercolor, sketch, pencil,',
+    '3D render, CGI, modern clothing, contemporary background,',
+    'deformed face, altered facial proportions, two heads, extra limbs,',
+    'blurry face, generic face, replaced face, fantasy elements, magic,',
+    'neon colors, purple tones, oversaturated'
+].join(' ');
+
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
@@ -238,11 +286,14 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify({
                 image_urls: [uploadUrl],
-                prompt: 'Transform this portrait photo into an 18th century pirate captain oil painting. Keep the person\'s facial features clearly recognizable. Add a weathered pirate tricorn hat, dramatic chiaroscuro lighting, ocean and ship background. The person should look like ' + guest.pirateName + ', a legendary pirate captain. Painterly brushstrokes, rich warm colors, museum-quality portrait.',
+                prompt: buildPiratePrompt(guest),
                 num_images: 1,
-                resolution: '1K',
+                resolution: '2K',
+                aspect_ratio: '3:4',
                 output_format: 'png',
-                safety_tolerance: '4'
+                safety_tolerance: '4',
+                thinking_level: 'high',
+                seed: 1720
             })
         });
 
