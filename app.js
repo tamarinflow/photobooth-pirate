@@ -304,8 +304,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var result = await response.json();
 
-        if (result.request_id) {
-            return await pollFalResult(result.request_id, apiKey);
+        if (result.status_url) {
+            return await pollFalResult(result.status_url, result.response_url, apiKey);
         }
 
         return (result.images && result.images[0] && result.images[0].url) || (result.image && result.image.url);
@@ -339,18 +339,18 @@ document.addEventListener('DOMContentLoaded', function () {
         return data.access_url;
     }
 
-    async function pollFalResult(requestId, apiKey) {
-        var maxAttempts = 30;
+    async function pollFalResult(statusUrl, responseUrl, apiKey) {
+        var maxAttempts = 60;
         for (var i = 0; i < maxAttempts; i++) {
             await sleep(2000);
 
-            var resp = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit/requests/' + requestId + '/status', {
+            var resp = await fetch(statusUrl, {
                 headers: { 'Authorization': 'Key ' + apiKey }
             });
             var status = await resp.json();
 
             if (status.status === 'COMPLETED') {
-                var resultResp = await fetch('https://queue.fal.run/fal-ai/nano-banana-2/edit/requests/' + requestId, {
+                var resultResp = await fetch(responseUrl, {
                     headers: { 'Authorization': 'Key ' + apiKey }
                 });
                 var result = await resultResp.json();
