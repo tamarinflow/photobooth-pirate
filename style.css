@@ -126,6 +126,33 @@ select:focus {
     border-color: var(--gold);
 }
 
+/* ── +1 guest input ── */
+.plusone-input {
+    margin-top: 12px;
+}
+
+.plusone-input input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg);
+    color: var(--white);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: border-color 0.2s;
+}
+
+.plusone-input input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.plusone-input input::placeholder {
+    color: var(--muted);
+}
+
 /* ── Guest preview ── */
 .guest-preview {
     margin-top: 16px;

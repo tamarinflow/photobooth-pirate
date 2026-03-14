@@ -117,6 +117,40 @@ const GUESTS = [
     }
 ];
 
+// Generic pirate identities for +1 guests
+const GENERIC_PIRATES = [
+    {
+        pirateName: "Le Corsaire Mystérieux",
+        joke: "Personne ne connaît son vrai nom... même pas lui.",
+        ancestorDesc: "Le Corsaire Mystérieux, flibustier légendaire surgi de nulle part. Apparu un soir de tempête, reparti avec tout l'or.",
+        characterPrompt: "This is a portrait of a mysterious corsair, legendary buccaneer of unknown origin. Enigmatic half-smile, one eyebrow raised. Dark leather tricorn, long weathered coat, brass compass in hand, mysterious scar across one cheek. Misty harbor at twilight behind, a ghost ship barely visible in the fog."
+    },
+    {
+        pirateName: "Le Loup des Caraïbes",
+        joke: "Hurle à la lune, mais seulement les soirs de rhum.",
+        ancestorDesc: "Le Loup des Caraïbes, chasseur solitaire des mers du Sud. Traquait les galions espagnols au clair de lune.",
+        characterPrompt: "This is a portrait of the Wolf of the Caribbean, lone hunter of the Southern seas. Fierce predatory gaze, sharp features, wild wind-swept hair. Dark grey captain's coat with silver wolf-head clasp, twin pistols crossed at chest, moonlight catching a silver ring. Full moon over a dark tropical sea, palm silhouettes on a distant island."
+    },
+    {
+        pirateName: "La Sirène d'Émeraude",
+        joke: "Chante si bien que même les poissons applaudissent.",
+        ancestorDesc: "La Sirène d'Émeraude, enchanteresse des sept mers. Sa voix calmait les tempêtes et charmait les équipages ennemis.",
+        characterPrompt: "This is a portrait of the Emerald Siren, enchantress of the seven seas. Captivating knowing smile, sea-green eyes that seem to glow. Flowing emerald silk sash over a fitted pirate coat, pearl necklace, gold earrings, a conch shell pendant. Turquoise Caribbean waters sparkling behind, sunset reflecting off gentle waves."
+    },
+    {
+        pirateName: "Le Boucanier Tonnerre",
+        joke: "Arrive toujours avec le bruit... et repart avec le butin.",
+        ancestorDesc: "Le Boucanier Tonnerre, terreur joyeuse de l'Atlantique. Ses canons faisaient plus de bruit que de dégâts, mais personne n'osait vérifier.",
+        characterPrompt: "This is a portrait of the Thunder Buccaneer, the jovial terror of the Atlantic. Bold roaring laugh, arms wide with confidence. Heavy red captain's coat with brass cannons embroidered on lapels, powder-stained hands, oversized tricorn with a lightning bolt pin. Cannon smoke and orange flash behind, ship deck shaking with a broadside."
+    },
+    {
+        pirateName: "L'Ombre de Port-Royal",
+        joke: "Disparaît toujours avant l'addition.",
+        ancestorDesc: "L'Ombre de Port-Royal, le fantôme des tavernes pirates. Volait les trésors sans jamais être vu, et laissait une carte de visite.",
+        characterPrompt: "This is a portrait of the Shadow of Port Royal, the ghost thief of pirate taverns. Sly knowing smirk, eyes glinting with mischief from under a low-pulled hat. Dark indigo coat blending into shadows, black gloves, a stolen ruby ring on one finger, playing card tucked in hatband. Dark candlelit Port Royal alley behind, moonlight on cobblestones."
+    }
+];
+
 // Populate le select
 function populateGuestSelect() {
     const select = document.getElementById('guestSelect');
@@ -127,9 +161,30 @@ function populateGuestSelect() {
         opt.textContent = guest.name;
         select.appendChild(opt);
     });
+    // Add +1 guest option
+    var sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '───────────';
+    select.appendChild(sep);
+    var plusOne = document.createElement('option');
+    plusOne.value = 'plusone';
+    plusOne.textContent = "Je ne suis pas sur la liste \u2728";
+    select.appendChild(plusOne);
 }
 
 // Get guest by index
 function getGuest(index) {
     return GUESTS[index] || null;
+}
+
+// Build a guest object for a +1
+function buildPlusOneGuest(firstName) {
+    var pirate = GENERIC_PIRATES[Math.floor(Math.random() * GENERIC_PIRATES.length)];
+    return {
+        name: firstName,
+        pirateName: pirate.pirateName,
+        joke: pirate.joke,
+        ancestorDesc: pirate.ancestorDesc,
+        characterPrompt: pirate.characterPrompt
+    };
 }

@@ -213,20 +213,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── Guest selection ──
+    var plusOneName = document.getElementById('plusOneName');
+    var plusOneInput = document.getElementById('plusOneInput');
+
     function onGuestSelect() {
-        var idx = parseInt(guestSelect.value);
+        var val = guestSelect.value;
+
+        // +1 guest mode
+        if (val === 'plusone') {
+            plusOneName.classList.remove('hidden');
+            plusOneInput.focus();
+            guestPreview.classList.add('hidden');
+            btnNext.disabled = true;
+            currentGuest = null;
+            return;
+        }
+
+        // Normal guest
+        plusOneName.classList.add('hidden');
+        var idx = parseInt(val);
         if (isNaN(idx)) return;
 
         currentGuest = getGuest(idx);
         if (!currentGuest) return;
 
-        guestJoke.textContent = '"' + currentGuest.joke + '"';
+        guestJoke.textContent = '\u201C' + currentGuest.joke + '\u201D';
         guestPreview.classList.remove('hidden');
         btnNext.disabled = false;
 
         // Update mutiny button state for this guest
         if (!mutinyLaunched) updateMutinyButton();
     }
+
+    // +1 name input handler
+    plusOneInput.addEventListener('input', function () {
+        var name = plusOneInput.value.trim();
+        if (name.length >= 2) {
+            currentGuest = buildPlusOneGuest(name);
+            guestJoke.textContent = '\u201C' + currentGuest.joke + '\u201D';
+            guestPreview.classList.remove('hidden');
+            btnNext.disabled = false;
+        } else {
+            currentGuest = null;
+            guestPreview.classList.add('hidden');
+            btnNext.disabled = true;
+        }
+    });
 
     // ── Photo handling ──
     function onPhotoChosen(e) {
