@@ -276,9 +276,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var blob = dataUrlToBlob(imageDataUrl);
+        console.log('FAL: uploading image...');
         var uploadUrl = await uploadToFal(blob, apiKey);
+        console.log('FAL: uploaded to', uploadUrl);
 
         transformText.textContent = 'Envoi au peintre...';
+
+        var body = {
+            image_urls: [uploadUrl],
+            prompt: buildPiratePrompt(guest),
+            num_images: 1,
+            resolution: '1K',
+            aspect_ratio: '3:4',
+            output_format: 'jpeg',
+            safety_tolerance: '4',
+            seed: 1720
+        };
+        console.log('FAL: calling fal.run with', JSON.stringify(body).length, 'bytes');
 
         var response = await fetch('https://fal.run/fal-ai/nano-banana-2/edit', {
             method: 'POST',
@@ -286,35 +300,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Authorization': 'Key ' + apiKey,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                image_url: uploadUrl,
-                prompt: buildPiratePrompt(guest),
-                num_images: 1,
-                resolution: '2K',
-                aspect_ratio: '3:4',
-                output_format: 'png',
-                safety_tolerance: '4',
-                thinking_level: 'high',
-                seed: 1720
-            })
+            body: JSON.stringify(body)
         });
 
+        console.log('FAL: response status', response.status);
         if (!response.ok) {
-            var err = await response.json().catch(function () { return {}; });
-            throw new Error(err.detail || 'API error: ' + response.status);
+            var errBody = await response.text();
+            console.error('FAL: error body', errBody);
+            throw new Error('API error: ' + response.status + ' ' + errBody.substring(0, 200));
         }
 
         transformText.textContent = 'Le peintre travaille...';
         var result = await response.json();
-        
-        // Check if this is an async job (has status_url)
-        if (result.status_url && result.response_url) {
-            // Async job - poll for result
-            return await pollFalResult(result.status_url, result.response_url, apiKey);
-        }
-        
-        // Sync response - return directly
-        return (result.images && result.images[0] && result.images[0].url) || (result.image && result.image.url);
+        console.log('FAL: result keys', Object.keys(result));
+        var imageUrl = (result.images && result.images[0] && result.images[0].url) || (result.image && result.image.url);
+        console.log('FAL: image URL', imageUrl);
+        return imageUrl;
     }
 
     async function uploadToFal(blob, apiKey) {
