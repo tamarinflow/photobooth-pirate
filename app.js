@@ -23,25 +23,24 @@ function buildPiratePrompt(guest) {
         'Add pirate-era costume and setting around the person. Never alter the face itself.'
     ].join(' ');
 
-    // ── 3. PAINTERLY STYLE — pirate-era adventure painting ──
+    // ── 3. PAINTERLY STYLE — Caribbean Golden Age fantasy ──
     var STYLE = [
-        'Painted in the style of Golden Age of Piracy illustration —',
-        'rich oil painting with the adventure energy of Howard Pyle and N.C. Wyeth.',
-        'Dramatic portrait composition that adapts to the subject\'s natural pose.',
-        'Warm palette: lantern amber, deep ocean midnight blue, weathered wood brown,',
-        'tarnished gold, salt-bleached canvas white.',
-        'Textures of worn leather, frayed rope, cracked wood, sea-spray on metal.',
-        'Background suggests life at sea — ship deck, harbor at dusk, candlelit cabin, or open ocean.',
-        'Dramatic lighting from varied sources: swinging lantern, moonlight through rigging,',
-        'cannon fire glow, tavern fireplace — strong contrast, deep shadows.',
-        'Aged oil canvas feel with visible brushwork and warm varnish patina.'
+        'Romantic Caribbean oil painting with warm tropical adventure atmosphere.',
+        'Richly saturated but natural colors — warm amber sunset, deep teal sea,',
+        'weathered wood brown, aged gold accents, soft coral and pink sky.',
+        'Painterly rendering with luminous glazes, the warmth of Turner seascapes',
+        'with swashbuckling adventure energy.',
+        'Tropical Caribbean background — distant palms, harbor, warm horizon, ship rigging.',
+        'Golden hour light suffusing the scene with a legendary Caribbean glow.',
+        'Visible oil brushwork, aged canvas texture, warm varnish patina.',
+        'Dramatic portrait composition that adapts to the subject\'s natural pose.'
     ].join(' ');
 
     // ── 4. QUALITY GUARDRAILS ──
     var QUALITY = [
-        'Museum-quality oil painting, richly detailed.',
+        'Museum-quality oil painting, richly detailed with vibrant tropical warmth.',
         'Not a cartoon, not digital art, not a photograph.',
-        'Sharp focus on the eyes. Subject fills the frame.'
+        'Sharp focus on the eyes, painterly detail everywhere else. Subject fills the frame.'
     ].join(' ');
 
     // Character leads, then face lock, then style, then quality
