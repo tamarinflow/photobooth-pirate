@@ -74,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var mutinyCount = 0;
     var firebaseReady = false;
     var mutinyDbRef = null;
-    var mutinyUnlockRef = null;
 
     // ── Firebase init ──
     function initFirebase() {
@@ -89,20 +88,18 @@ document.addEventListener('DOMContentLoaded', function () {
             firebase.auth().signInAnonymously().then(function () {
                 firebaseReady = true;
                 mutinyDbRef = firebase.database().ref('mutiny/voters');
-                mutinyUnlockRef = firebase.database().ref('mutiny/unlocked');
-
-                // Listen for unlock state
-                mutinyUnlockRef.on('value', function (snapshot) {
-                    mutinyUnlocked = snapshot.val() === true;
-                    updateMutinyLockState();
-                });
-
                 // Listen for real-time changes
                 mutinyDbRef.on('value', function (snapshot) {
                     var data = snapshot.val() || {};
+                    // Check for unlock sentinel
+                    if (data.__unlocked__) {
+                        mutinyUnlocked = true;
+                        delete data.__unlocked__;
+                    }
                     mutinyVoters = Object.keys(data);
                     mutinyCount = mutinyVoters.length;
                     mutinyLaunched = mutinyCount >= MUTINY_GOAL;
+                    updateMutinyLockState();
 
                     // Sync to localStorage as cache
                     localStorage.setItem('pirate_mutiny_voters', JSON.stringify(mutinyVoters));
@@ -569,9 +566,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (skullTapCount >= 3) {
                 skullTapCount = 0;
-                // Unlock mutiny via Firebase
-                if (firebaseReady && mutinyUnlockRef) {
-                    mutinyUnlockRef.set(true);
+                // Unlock mutiny via Firebase (write as sentinel in voters path)
+                if (firebaseReady && mutinyDbRef) {
+                    mutinyDbRef.child('__unlocked__').set(true);
                     toast('Mutinerie deverrouillee !');
                 } else {
                     mutinyUnlocked = true;

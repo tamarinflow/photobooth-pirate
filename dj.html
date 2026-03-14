@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☠ Pirate DJ ☠</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0a09;
+    --bg-card: #1c1917;
+    --gold: #d4a017;
+    --gold-light: #facc15;
+    --red: #991b1b;
+    --white: #fafaf9;
+    --muted: #a8a29e;
+    --border: #44403c;
+    --current-bpm: 120;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #yt-container {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    left: -9999px;
+    top: -9999px;
+  }
+
+  /* Splash */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    text-align: center;
+    padding: 24px;
+  }
+
+  #splash h1 {
+    font-family: 'Pirata One', cursive;
+    font-size: clamp(48px, 12vw, 96px);
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(212, 160, 23, 0.5);
+    line-height: 1;
+  }
+
+  #splash .skull {
+    font-size: clamp(80px, 20vw, 160px);
+    animation: floatSkull 3s ease-in-out infinite;
+  }
+
+  @keyframes floatSkull {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  #splash p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 320px;
+  }
+
+  #btn-start {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 18px 48px;
+    font-family: 'Pirata One', cursive;
+    font-size: 28px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 0 30px rgba(212, 160, 23, 0.4);
+  }
+
+  #btn-start:hover { background: var(--gold-light); transform: scale(1.04); }
+  #btn-start:active { transform: scale(0.97); }
+
+  /* App */
+  #app {
+    width: 100%;
+    max-width: 600px;
+    padding: 0 16px 80px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    text-align: center;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-family: 'Pirata One', cursive;
+    font-size: 36px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(212, 160, 23, 0.3);
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  .mode-btn {
+    padding: 8px 24px;
+    border-radius: 999px;
+    border: 1.5px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .mode-btn.active { background: var(--gold); color: var(--bg); }
+  .mode-btn:not(.active):hover { background: rgba(212, 160, 23, 0.1); }
+
+  /* Now Playing */
+  .now-playing {
+    padding: 24px 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  #np-title {
+    font-family: 'Pirata One', cursive;
+    font-size: clamp(24px, 6vw, 36px);
+    color: var(--gold);
+    line-height: 1.15;
+    min-height: 42px;
+  }
+
+  #np-artist {
+    font-size: 18px;
+    color: var(--white);
+    margin-top: 4px;
+    min-height: 26px;
+  }
+
+  .track-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  #bpm-display {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .bpm-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+    animation: bpmPulse calc(60s / var(--current-bpm)) ease-in-out infinite;
+  }
+
+  @keyframes bpmPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.5; }
+  }
+
+  .energy-dots { display: flex; gap: 3px; }
+
+  .energy-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .energy-dot.lit { background: var(--gold-light); }
+
+  /* Progress */
+  .progress-section {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.25s linear;
+  }
+
+  .progress-boat {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+    left: 0%;
+    transition: left 0.25s linear;
+    filter: drop-shadow(0 0 4px rgba(212, 160, 23, 0.7));
+  }
+
+  .progress-time {
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  #next-track-display {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+
+  #next-track-name {
+    color: var(--white);
+  }
+
+  /* Controls */
+  .controls {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .transport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .ctrl-btn {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .ctrl-btn:hover { color: var(--gold); background: rgba(212, 160, 23, 0.08); }
+
+  .ctrl-btn.primary {
+    width: 64px;
+    height: 64px;
+    background: var(--gold);
+    color: var(--bg);
+    font-size: 26px;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(212, 160, 23, 0.3);
+  }
+
+  .ctrl-btn.primary:hover { background: var(--gold-light); color: var(--bg); transform: scale(1.05); }
+  .ctrl-btn.primary:active { transform: scale(0.96); }
+
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .volume-icon { font-size: 18px; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--gold) var(--vol-pct, 80%), var(--border) var(--vol-pct, 80%));
+    cursor: pointer;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(212, 160, 23, 0.5);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 6px rgba(212, 160, 23, 0.5);
+  }
+
+  .crossfade-indicator {
+    text-align: center;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    min-height: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .crossfade-indicator.active {
+    opacity: 1;
+    animation: cfPulse 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes cfPulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+
+  .state-badge {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    padding: 4px 0 0;
+    min-height: 18px;
+  }
+
+  /* Tracklist */
+  .tracklist-section { padding-top: 16px; }
+
+  .tracklist {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .tracklist::-webkit-scrollbar { width: 4px; }
+  .tracklist::-webkit-scrollbar-track { background: var(--bg-card); }
+  .tracklist::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+    user-select: none;
+  }
+
+  .track-row:hover { background: #292524; }
+
+  .track-row.current {
+    border-left-color: var(--gold);
+    background: #1f1c18;
+  }
+
+  .track-row.played { opacity: 0.45; }
+
+  .tr-num {
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 22px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .tr-playing-icon {
+    font-size: 10px;
+    min-width: 12px;
+    color: var(--gold);
+  }
+
+  .tr-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tr-title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--white);
+  }
+
+  .track-row.current .tr-title { color: var(--gold); }
+
+  .tr-artist {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tr-bpm {
+    font-size: 11px;
+    color: var(--border);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .track-row.current .tr-bpm { color: var(--muted); }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--red);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="yt-container">
+  <div id="player-a"></div>
+  <div id="player-b"></div>
+</div>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="skull">☠</div>
+  <h1>Pirate DJ</h1>
+  <p>Choose your mode and set sail. The seas of sound await, ye landlubber.</p>
+  <div class="mode-toggle" style="margin-bottom:8px">
+    <button class="mode-btn active" id="splash-bardcore" onclick="selectSplashMode('bardcore')">Bardcore</button>
+    <button class="mode-btn" id="splash-mutinerie" onclick="selectSplashMode('mutinerie')">Mutinerie</button>
+  </div>
+  <button id="btn-start" onclick="startParty()">&#9875; Start the Party</button>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <h1>&#9760; Pirate DJ &#9760;</h1>
+    <div class="mode-toggle">
+      <button class="mode-btn" id="hdr-bardcore" onclick="switchMode('bardcore')">Bardcore</button>
+      <button class="mode-btn" id="hdr-mutinerie" onclick="switchMode('mutinerie')">Mutinerie</button>
+    </div>
+  </header>
+
+  <div class="now-playing">
+    <div class="section-label">Now Playing</div>
+    <div id="np-title">&#8212;</div>
+    <div id="np-artist"></div>
+    <div class="track-meta">
+      <div id="bpm-display">BPM: &#8212;</div>
+      <div class="bpm-dot"></div>
+      <div class="energy-dots" id="energy-dots"></div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-bar-wrap" id="progress-wrap" onclick="seekFromClick(event)">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="progress-boat" id="progress-boat">&#9981;</div>
+      </div>
+      <div class="progress-time" id="progress-time">0:00</div>
+    </div>
+    <div id="next-track-display"></div>
+  </div>
+
+  <div class="controls">
+    <div class="crossfade-indicator" id="cf-indicator">&#9889; Crossfading</div>
+    <div class="transport">
+      <button class="ctrl-btn" onclick="prevTrack()" title="Previous">&#9198;</button>
+      <button class="ctrl-btn primary" id="btn-playpause" onclick="togglePlay()">&#9654;</button>
+      <button class="ctrl-btn" onclick="nextTrack()" title="Next">&#9197;</button>
+    </div>
+    <div class="volume-row">
+      <span class="volume-icon">&#128266;</span>
+      <input type="range" id="vol-slider" min="0" max="100" value="80" oninput="setVolume(this.value)">
+    </div>
+    <div class="state-badge" id="state-badge"></div>
+  </div>
+
+  <div class="tracklist-section">
+    <div class="section-label" style="margin-bottom:10px">Tracklist</div>
+    <div class="tracklist" id="tracklist"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── TRACKLIST DATA ───────────────────────────────────────────────────────────
+
+var MUTINERIE = [
+  // ── Warm-up (87-103 BPM) ──
+  { id:'PbZl1CQTMz4', title:'Make It Better',    artist:'Anderson .Paak',           bpm:88,  energy:7, startSeconds:15, endSeconds:195, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'hsm4poTWjMs', title:'WAP (Clean)',        artist:'Cardi B',                  bpm:87,  energy:8, startSeconds:10, endSeconds:177, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'uxpDa-c-4Mc', title:'Hotline Bling',      artist:'Drake',                    bpm:93,  energy:5, startSeconds:15, endSeconds:225, fadeInDuration:4,  fadeOutDuration:8  },
+  { id:'pok8H_KF1FA', title:'Say So',             artist:'Doja Cat',                 bpm:96,  energy:7, startSeconds:15, endSeconds:226, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'rqLSCQbxtPJ', title:'Get Ur Freak On',    artist:'Missy Elliott',            bpm:96,  energy:8, startSeconds:15, endSeconds:210, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'od-5gCO_PGE', title:'Give Up The Funk',   artist:'Parliament',               bpm:99,  energy:8, startSeconds:30, endSeconds:230, fadeInDuration:6,  fadeOutDuration:10 },
+  { id:'yrtWLyp5gLI', title:'CUFF IT',            artist:'Beyonce',                  bpm:100, energy:9, startSeconds:15, endSeconds:200, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'XaCrQL_8eMY', title:'Juice',              artist:'Lizzo',                    bpm:103, energy:8, startSeconds:10, endSeconds:172, fadeInDuration:4,  fadeOutDuration:6  },
+  // ── Funk build (112-126 BPM) ──
+  { id:'OPf0YbXqDm0', title:'Uptown Funk',        artist:'Bruno Mars',               bpm:115, energy:9, startSeconds:15, endSeconds:258, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'sy1dYFGkPUE', title:'D.A.N.C.E.',         artist:'Justice',                  bpm:112, energy:8, startSeconds:20, endSeconds:260, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'5NV6Rdv1a3I', title:'Get Lucky',          artist:'Daft Punk',                bpm:116, energy:8, startSeconds:30, endSeconds:220, fadeInDuration:4,  fadeOutDuration:8  },
+  { id:'Gs069dndIYk', title:'September',          artist:'Earth, Wind & Fire',       bpm:126, energy:9, startSeconds:15, endSeconds:203, fadeInDuration:4,  fadeOutDuration:6  },
+  // ── House ramp (120-124 BPM) ──
+  { id:'ktlJC213PPs', title:'Chemicals',          artist:'SG Lewis',                 bpm:120, energy:7, startSeconds:10, endSeconds:189, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'93ASUImTedo', title:'Latch',              artist:'Disclosure ft. Sam Smith', bpm:120, energy:7, startSeconds:15, endSeconds:220, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'K0HSD_i2DvA', title:'Around the World',   artist:'Daft Punk',                bpm:121, energy:8, startSeconds:0,  endSeconds:240, fadeInDuration:4,  fadeOutDuration:8  },
+  { id:'l4UkYBr1NnA', title:'Marea',              artist:'Fred again..',             bpm:122, energy:7, startSeconds:30, endSeconds:240, fadeInDuration:6,  fadeOutDuration:8  },
+  { id:'bRt5z880CFY', title:'Superheroes',         artist:'Daft Punk',                bpm:123, energy:7, startSeconds:0,  endSeconds:240, fadeInDuration:4,  fadeOutDuration:8  },
+  { id:'PLACEHOLDER', title:'Mon Cheri',           artist:'Sofi Tukker',              bpm:124, energy:7, startSeconds:10, endSeconds:195, fadeInDuration:4,  fadeOutDuration:6  },
+  // ── Peak (122 BPM) ──
+  { id:'Tx9zMFodNtA', title:'Innerbloom',         artist:'RUFUS DU SOL',             bpm:122, energy:6, startSeconds:60, endSeconds:360, fadeInDuration:8,  fadeOutDuration:10 },
+  { id:'FGBhQbmPwH8', title:'One More Time',      artist:'Daft Punk',                bpm:122, energy:9, startSeconds:0,  endSeconds:240, fadeInDuration:4,  fadeOutDuration:8  },
+  // ── Euphoric plateau (125-128 BPM) ──
+  { id:'mMfxI3r_LyA', title:'Lady (Hear Me Tonight)', artist:'Modjo',                bpm:125, energy:8, startSeconds:0,  endSeconds:210, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'4Vx7MTU-UVE', title:'Best Friend',        artist:'Sofi Tukker',              bpm:125, energy:8, startSeconds:10, endSeconds:165, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'sCz5y84dwuA', title:'Nanana',             artist:'Peggy Gou',                bpm:126, energy:8, startSeconds:15, endSeconds:202, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'p6Cnazi_Fi0', title:'Padam Padam',        artist:'Kylie Minogue',            bpm:127, energy:8, startSeconds:15, endSeconds:192, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'vE4VlA_9OrI', title:'Canned Heat',        artist:'Jamiroquai',               bpm:127, energy:9, startSeconds:15, endSeconds:222, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'YosUXcM5NqU', title:'Feel So Close',      artist:'Calvin Harris',            bpm:128, energy:8, startSeconds:15, endSeconds:218, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'Sa3VDErv2wk', title:'Music Sounds Better With You', artist:'Stardust',       bpm:128, energy:8, startSeconds:0,  endSeconds:220, fadeInDuration:4,  fadeOutDuration:8  },
+  // ── Finale sprint (132-171 BPM) ──
+  { id:'ILWSp0m9G2U', title:'What a Feeling (Fame)', artist:'Irene Cara',            bpm:132, energy:8, startSeconds:15, endSeconds:230, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'eJEKHdvntPI', title:'Savage',             artist:'Megan Thee Stallion',      bpm:133, energy:8, startSeconds:15, endSeconds:199, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'PWgvGjAhvIw', title:'Hey Ya!',            artist:'Outkast',                  bpm:160, energy:9, startSeconds:15, endSeconds:222, fadeInDuration:4,  fadeOutDuration:6  },
+  { id:'fHI8X4OXluQ', title:'Blinding Lights',    artist:'The Weeknd',               bpm:171, energy:9, startSeconds:10, endSeconds:190, fadeInDuration:4,  fadeOutDuration:6  },
+];
+
+var BARDCORE = [
+  { id:'PLACEHOLDER', title:'Nothing Else Matters',         artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Creep',                        artist:'Hildegard von Blingin\''},
+  { id:'PLACEHOLDER', title:'The Bard\'s Song',             artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Wonderwall',                   artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'Jolene',                       artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Rainbow in the Dark',          artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Astronomia',                   artist:'Cornelius Link' },
+  { id:'PLACEHOLDER', title:'Summertime Sadness',           artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Somebody to Love',             artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'I Want It That Way',           artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'House of the Rising Sun',      artist:'Hildegard von Blingin\' & Algal the Bard' },
+  { id:'PLACEHOLDER', title:'The Unforgiven',               artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Somebody That I Used to Know', artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Eye of the Tiger',             artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'Fear of the Dark',             artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Paint It Black',               artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Pumped Up Kicks',              artist:'Cornelius Link' },
+  { id:'PLACEHOLDER', title:'Hurt',                         artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Du Hast',                      artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Hips Don\'t Lie',              artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'Toxicity',                     artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Bad Romance',                  artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Aerials',                      artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Mr. Brightside',               artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'Crazy Train',                  artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'What Is Love',                 artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'The Final Countdown',          artist:'Algal the Bard' },
+  { id:'PLACEHOLDER', title:'Watermelon Sugar',             artist:'Stantough' },
+  { id:'PLACEHOLDER', title:'Save Your Tears',              artist:'Hildegard von Blingin\'' },
+  { id:'PLACEHOLDER', title:'Through the Fire and Flames',  artist:'Algal the Bard' },
+];
+
+BARDCORE.forEach(function(t) {
+  t.bpm = 120;
+  t.energy = 5;
+  t.startSeconds = 0;
+  t.endSeconds = 0;
+  t.fadeInDuration = 0;
+  t.fadeOutDuration = 0;
+});
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+var ST_IDLE       = 'IDLE';
+var ST_PLAYING    = 'PLAYING';
+var ST_CROSSFADING = 'CROSSFADING';
+var ST_PAUSED     = 'PAUSED';
+var ST_ENDED      = 'ENDED';
+
+var mode = 'bardcore';
+var tracklist = BARDCORE;
+var currentIndex = 0;
+var appState = ST_IDLE;
+
+var activePlayer = 'a';
+var playerA = null;
+var playerB = null;
+
+var masterVolume = 80;
+
+var crossfadeStartTime = null;
+var crossfadeDuration  = 0;
+
+var preloaded = false;
+var bardcoreGapTimer = null;
+var pollInterval = null;
+
+// ─── SPLASH MODE SELECTOR ────────────────────────────────────────────────────
+
+function selectSplashMode(m) {
+  mode = m;
+  document.getElementById('splash-bardcore').classList.toggle('active', m === 'bardcore');
+  document.getElementById('splash-mutinerie').classList.toggle('active', m === 'mutinerie');
+}
+
+function startParty() {
+  document.getElementById('splash').style.display = 'none';
+  tracklist = (mode === 'mutinerie') ? MUTINERIE : BARDCORE;
+  currentIndex = 0;
+  updateModeButtons();
+  renderTracklist();
+  startPolling();
+  playCurrentTrack();
+}
+
+function switchMode(m) {
+  if (m === mode) return;
+  mode = m;
+  tracklist = (mode === 'mutinerie') ? MUTINERIE : BARDCORE;
+  currentIndex = 0;
+  stopAll();
+  activePlayer = 'a';
+  updateModeButtons();
+  renderTracklist();
+  playCurrentTrack();
+}
+
+function updateModeButtons() {
+  document.getElementById('hdr-bardcore').classList.toggle('active', mode === 'bardcore');
+  document.getElementById('hdr-mutinerie').classList.toggle('active', mode === 'mutinerie');
+}
+
+// ─── YOUTUBE API ──────────────────────────────────────────────────────────────
+
+function onYouTubeIframeAPIReady() {
+  var pv = { controls: 0, disablekb: 1, fs: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1 };
+
+  playerA = new YT.Player('player-a', {
+    width: 1, height: 1,
+    playerVars: pv,
+    events: {
+      onStateChange: function(e) { onPlayerStateChange(e, 'a'); },
+      onError:       function(e) { onPlayerError(e, 'a'); },
+    }
+  });
+
+  playerB = new YT.Player('player-b', {
+    width: 1, height: 1,
+    playerVars: pv,
+    events: {
+      onStateChange: function(e) { onPlayerStateChange(e, 'b'); },
+      onError:       function(e) { onPlayerError(e, 'b'); },
+    }
+  });
+}
+
+function onPlayerStateChange(event, which) {
+  if (mode === 'bardcore' && which === activePlayer) {
+    if (event.data === YT.PlayerState.ENDED) {
+      handleBardcoreEnd();
+    }
+  }
+}
+
+function onPlayerError(event, which) {
+  showToast('Arrr! Track failed to load \u2014 skipping...');
+  if (which === activePlayer) {
+    nextTrack();
+  }
+}
+
+// ─── PLAYER HELPERS ───────────────────────────────────────────────────────────
+
+function getActive()   { return activePlayer === 'a' ? playerA : playerB; }
+function getInactive() { return activePlayer === 'a' ? playerB : playerA; }
+
+function swapPlayers() { activePlayer = (activePlayer === 'a') ? 'b' : 'a'; }
+
+function setPlayerVol(player, vol) {
+  if (!player) return;
+  try { player.setVolume(vol); } catch(e) {}
+}
+
+function stopAll() {
+  clearTimeout(bardcoreGapTimer);
+  crossfadeStartTime = null;
+  preloaded = false;
+  appState = ST_IDLE;
+  try { if (playerA) playerA.stopVideo(); } catch(e) {}
+  try { if (playerB) playerB.stopVideo(); } catch(e) {}
+  setPlayerVol(playerA, masterVolume);
+  setPlayerVol(playerB, 0);
+  document.getElementById('cf-indicator').classList.remove('active');
+}
+
+// ─── PLAYBACK ────────────────────────────────────────────────────────────────
+
+function playCurrentTrack() {
+  if (!playerA || !playerB) {
+    setTimeout(playCurrentTrack, 300);
+    return;
+  }
+  if (currentIndex >= tracklist.length) {
+    appState = ST_ENDED;
+    return;
+  }
+
+  var track = tracklist[currentIndex];
+  var p = getActive();
+  preloaded = false;
+  clearTimeout(bardcoreGapTimer);
+  document.getElementById('cf-indicator').classList.remove('active');
+
+  try {
+    p.loadVideoById({ videoId: track.id, startSeconds: track.startSeconds || 0 });
+    setPlayerVol(p, masterVolume);
+    setPlayerVol(getInactive(), 0);
+    appState = ST_PLAYING;
+  } catch(e) {
+    showToast('Failed to load track, skipping...');
+    nextTrack();
+    return;
+  }
+
+  document.getElementById('btn-playpause').textContent = '\u23F8';
+  document.getElementById('state-badge').textContent = '';
+  updateNowPlaying();
+  updateTracklistUI();
+}
+
+function togglePlay() {
+  if (appState === ST_IDLE || appState === ST_ENDED) {
+    playCurrentTrack();
+    return;
+  }
+  var p = getActive();
+  if (!p) return;
+  try {
+    if (appState === ST_PAUSED) {
+      p.playVideo();
+      appState = ST_PLAYING;
+      document.getElementById('btn-playpause').textContent = '\u23F8';
+      document.getElementById('state-badge').textContent = '';
+    } else if (appState === ST_PLAYING) {
+      p.pauseVideo();
+      appState = ST_PAUSED;
+      document.getElementById('btn-playpause').textContent = '\u25B6';
+      document.getElementById('state-badge').textContent = 'PAUSED';
+    }
+  } catch(e) {}
+}
+
+function nextTrack() {
+  if (currentIndex < tracklist.length - 1) {
+    currentIndex++;
+    stopAll();
+    activePlayer = 'a';
+    playCurrentTrack();
+  } else {
+    stopAll();
+    appState = ST_ENDED;
+    document.getElementById('btn-playpause').textContent = '\u25B6';
+    document.getElementById('state-badge').textContent = 'VOYAGE COMPLETE';
+    showToast('End of the voyage, Captain!');
+  }
+}
+
+function prevTrack() {
+  if (currentIndex > 0) currentIndex--;
+  stopAll();
+  activePlayer = 'a';
+  playCurrentTrack();
+}
+
+function jumpToTrack(index) {
+  if (index === currentIndex && (appState === ST_PLAYING || appState === ST_CROSSFADING)) return;
+  currentIndex = index;
+  stopAll();
+  activePlayer = 'a';
+  playCurrentTrack();
+}
+
+// ─── BARDCORE ────────────────────────────────────────────────────────────────
+
+function handleBardcoreEnd() {
+  if (currentIndex >= tracklist.length - 1) {
+    appState = ST_ENDED;
+    document.getElementById('btn-playpause').textContent = '\u25B6';
+    document.getElementById('state-badge').textContent = 'VOYAGE COMPLETE';
+    return;
+  }
+  bardcoreGapTimer = setTimeout(function() {
+    currentIndex++;
+    playCurrentTrack();
+  }, 1000);
+}
+
+// ─── POLLING ─────────────────────────────────────────────────────────────────
+
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(tick, 250);
+}
+
+function tick() {
+  if (appState === ST_IDLE || appState === ST_ENDED || appState === ST_PAUSED) {
+    return;
+  }
+
+  var track = tracklist[currentIndex];
+  var p = getActive();
+  if (!p) return;
+
+  var currentTime = 0;
+  try { currentTime = p.getCurrentTime() || 0; } catch(e) { return; }
+
+  var startSec    = track.startSeconds || 0;
+  var endSec      = track.endSeconds || 0;
+  var fadeOutDur  = track.fadeOutDuration || 0;
+  var fadeInDur   = track.fadeInDuration || 0;
+  var effectiveEnd = (endSec > 0) ? endSec : Infinity;
+  var fadeOutStart = effectiveEnd - fadeOutDur;
+
+  // Progress display
+  var duration = (endSec > 0) ? (endSec - startSec) : 0;
+  var elapsed  = Math.max(0, currentTime - startSec);
+  var pct      = (duration > 0) ? Math.min(elapsed / duration, 1) : 0;
+  updateProgressUI(pct, currentTime, endSec);
+
+  if (appState === ST_PLAYING && mode === 'mutinerie') {
+    // Preload
+    if (!preloaded && currentIndex < tracklist.length - 1 && currentTime >= fadeOutStart - 10) {
+      var nextT = tracklist[currentIndex + 1];
+      try {
+        getInactive().cueVideoById({ videoId: nextT.id, startSeconds: nextT.startSeconds || 0 });
+        preloaded = true;
+      } catch(e) {}
+    }
+
+    // Begin crossfade
+    if (fadeOutDur > 0 && currentTime >= fadeOutStart && currentIndex < tracklist.length - 1) {
+      beginCrossfade(fadeOutDur, fadeInDur);
+    }
+
+    // Hard stop past end
+    if (effectiveEnd !== Infinity && currentTime >= effectiveEnd) {
+      if (currentIndex < tracklist.length - 1) {
+        nextTrack();
+      } else {
+        stopAll();
+        appState = ST_ENDED;
+        document.getElementById('btn-playpause').textContent = '\u25B6';
+        document.getElementById('state-badge').textContent = 'VOYAGE COMPLETE';
+      }
+    }
+
+  } else if (appState === ST_PLAYING && mode === 'bardcore') {
+    // Poll-based end for tracks with explicit endSeconds
+    if (endSec > 0 && currentTime >= endSec) {
+      handleBardcoreEnd();
+    }
+  }
+
+  if (appState === ST_CROSSFADING) {
+    tickCrossfade();
+  }
+}
+
+// ─── CROSSFADE ────────────────────────────────────────────────────────────────
+
+function beginCrossfade(fadeOutDur, fadeInDur) {
+  if (appState === ST_CROSSFADING) return;
+  appState = ST_CROSSFADING;
+  crossfadeStartTime = Date.now();
+  crossfadeDuration = Math.max(fadeOutDur, fadeInDur, 1) * 1000;
+  document.getElementById('cf-indicator').classList.add('active');
+
+  var incoming = getInactive();
+  try {
+    incoming.playVideo();
+    setPlayerVol(incoming, 0);
+  } catch(e) {}
+}
+
+function tickCrossfade() {
+  if (!crossfadeStartTime) return;
+
+  var elapsed = Date.now() - crossfadeStartTime;
+  var ratio   = Math.min(elapsed / crossfadeDuration, 1.0);
+
+  // Equal-power crossfade
+  var volIn  = Math.sin(ratio * Math.PI / 2) * masterVolume;
+  var volOut = Math.cos(ratio * Math.PI / 2) * masterVolume;
+
+  setPlayerVol(getActive(),   volOut);
+  setPlayerVol(getInactive(), volIn);
+
+  if (ratio >= 1.0) {
+    var outgoing = getActive();
+    try { outgoing.stopVideo(); } catch(e) {}
+    setPlayerVol(outgoing, 0);
+
+    swapPlayers();
+    setPlayerVol(getActive(), masterVolume);
+
+    currentIndex++;
+    preloaded = false;
+    crossfadeStartTime = null;
+    appState = ST_PLAYING;
+
+    document.getElementById('cf-indicator').classList.remove('active');
+    updateNowPlaying();
+    updateTracklistUI();
+
+    if (currentIndex >= tracklist.length) {
+      appState = ST_ENDED;
+      document.getElementById('btn-playpause').textContent = '\u25B6';
+      document.getElementById('state-badge').textContent = 'VOYAGE COMPLETE';
+    }
+  }
+}
+
+// ─── VOLUME ───────────────────────────────────────────────────────────────────
+
+function setVolume(val) {
+  masterVolume = parseInt(val, 10);
+  var pct = masterVolume + '%';
+  document.getElementById('vol-slider').style.setProperty('--vol-pct', pct);
+  if (appState === ST_CROSSFADING) return;
+  if (appState === ST_PLAYING || appState === ST_PAUSED) {
+    setPlayerVol(getActive(),   masterVolume);
+    setPlayerVol(getInactive(), 0);
+  }
+}
+
+// ─── SEEK ────────────────────────────────────────────────────────────────────
+
+function seekFromClick(event) {
+  if (appState === ST_IDLE || appState === ST_ENDED || appState === ST_CROSSFADING) return;
+  var track = tracklist[currentIndex];
+  if (!track.endSeconds) return;
+  var wrap = document.getElementById('progress-wrap');
+  var rect = wrap.getBoundingClientRect();
+  var ratio = Math.max(0, Math.min((event.clientX - rect.left) / rect.width, 1));
+  var startSec = track.startSeconds || 0;
+  var targetTime = startSec + ratio * (track.endSeconds - startSec);
+  try { getActive().seekTo(targetTime, true); } catch(e) {}
+}
+
+// ─── UI ───────────────────────────────────────────────────────────────────────
+
+function updateNowPlaying() {
+  var track = tracklist[currentIndex] || {};
+  document.getElementById('np-title').textContent  = track.title  || '\u2014';
+  document.getElementById('np-artist').textContent = track.artist || '';
+
+  var bpm = track.bpm || 120;
+  document.getElementById('bpm-display').textContent = 'BPM: ' + bpm;
+  document.documentElement.style.setProperty('--current-bpm', bpm);
+
+  // Energy dots — built with DOM, no innerHTML
+  var dotsEl = document.getElementById('energy-dots');
+  while (dotsEl.firstChild) dotsEl.removeChild(dotsEl.firstChild);
+  for (var i = 1; i <= 9; i++) {
+    var d = document.createElement('div');
+    d.className = 'energy-dot' + (i <= (track.energy || 0) ? ' lit' : '');
+    dotsEl.appendChild(d);
+  }
+
+  // Next track display
+  var nextEl = document.getElementById('next-track-display');
+  while (nextEl.firstChild) nextEl.removeChild(nextEl.firstChild);
+  if (currentIndex < tracklist.length - 1) {
+    var next = tracklist[currentIndex + 1];
+    var labelNode = document.createTextNode('NEXT: ');
+    var nameSpan  = document.createElement('span');
+    nameSpan.id = 'next-track-name';
+    nameSpan.textContent = next.title + ' \u2014 ' + next.artist;
+    nextEl.appendChild(labelNode);
+    nextEl.appendChild(nameSpan);
+  } else {
+    nextEl.textContent = 'Last track \u2014 sail into the sunset';
+  }
+
+  document.getElementById('state-badge').textContent = '';
+}
+
+function updateProgressUI(pct, currentTime, endSec) {
+  var fillEl = document.getElementById('progress-fill');
+  var boatEl = document.getElementById('progress-boat');
+  var timeEl = document.getElementById('progress-time');
+
+  fillEl.style.width = (pct * 100) + '%';
+  boatEl.style.left  = (pct * 100) + '%';
+
+  if (endSec > 0) {
+    var remaining = Math.max(0, endSec - currentTime);
+    timeEl.textContent = '-' + formatTime(remaining);
+  } else if (currentTime > 0) {
+    timeEl.textContent = formatTime(currentTime);
+  } else {
+    timeEl.textContent = '0:00';
+  }
+}
+
+function formatTime(seconds) {
+  var s  = Math.floor(seconds);
+  var m  = Math.floor(s / 60);
+  var ss = String(s % 60).padStart(2, '0');
+  return m + ':' + ss;
+}
+
+function renderTracklist() {
+  var container = document.getElementById('tracklist');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  tracklist.forEach(function(track, i) {
+    var row = document.createElement('div');
+    row.className = 'track-row' + (i === currentIndex ? ' current' : '');
+    row.id = 'tr-' + i;
+    row.addEventListener('click', (function(idx) {
+      return function() { jumpToTrack(idx); };
+    })(i));
+
+    var numEl = document.createElement('div');
+    numEl.className = 'tr-num';
+    numEl.textContent = i + 1;
+
+    var iconEl = document.createElement('div');
+    iconEl.className = 'tr-playing-icon';
+    iconEl.id = 'tpi-' + i;
+    iconEl.textContent = (i === currentIndex) ? '\u25B6' : '';
+
+    var infoEl = document.createElement('div');
+    infoEl.className = 'tr-info';
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'tr-title';
+    titleEl.textContent = track.title;
+
+    var artistEl = document.createElement('div');
+    artistEl.className = 'tr-artist';
+    artistEl.textContent = track.artist;
+
+    infoEl.appendChild(titleEl);
+    infoEl.appendChild(artistEl);
+
+    row.appendChild(numEl);
+    row.appendChild(iconEl);
+    row.appendChild(infoEl);
+
+    if (track.bpm) {
+      var bpmEl = document.createElement('div');
+      bpmEl.className = 'tr-bpm';
+      bpmEl.textContent = track.bpm;
+      row.appendChild(bpmEl);
+    }
+
+    container.appendChild(row);
+  });
+}
+
+function updateTracklistUI() {
+  tracklist.forEach(function(_, i) {
+    var row = document.getElementById('tr-' + i);
+    if (!row) return;
+    var isCurrent = (i === currentIndex);
+    var isPlayed  = (i < currentIndex);
+    row.className = 'track-row' +
+      (isCurrent ? ' current' : '') +
+      (isPlayed  ? ' played'  : '');
+    var icon = document.getElementById('tpi-' + i);
+    if (icon) icon.textContent = isCurrent ? '\u25B6' : '';
+  });
+
+  var currentRow = document.getElementById('tr-' + currentIndex);
+  if (currentRow) {
+    currentRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
+// ─── FIREBASE — MUTINY TRIGGER ──────────────────────────────────────────────
+
+var MUTINY_GOAL = 8;
+var firebaseMutinyTriggered = false;
+
+function initFirebaseMutinyListener() {
+  try {
+    firebase.initializeApp({
+      apiKey:            "AIzaSyCedAd2j2o98LyiU4i0hkk7LHiRVVGn2mE",
+      authDomain:        "photobooth-pirate.firebaseapp.com",
+      databaseURL:       "https://photobooth-pirate-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:         "photobooth-pirate",
+      storageBucket:     "photobooth-pirate.firebasestorage.app",
+      messagingSenderId: "162341012907",
+      appId:             "1:162341012907:web:a17885deab0bb7b60e3eee"
+    });
+
+    firebase.auth().signInAnonymously().then(function() {
+      var mutinyRef = firebase.database().ref('mutiny/voters');
+      mutinyRef.on('value', function(snapshot) {
+        var data = snapshot.val() || {};
+        var voterCount = Object.keys(data).length;
+
+        if (voterCount >= MUTINY_GOAL && !firebaseMutinyTriggered) {
+          firebaseMutinyTriggered = true;
+          triggerMutinerieSwitch();
+        }
+      });
+    }).catch(function(err) {
+      console.warn('Firebase auth failed, mutiny trigger disabled:', err);
+    });
+  } catch(err) {
+    console.warn('Firebase init failed:', err);
+  }
+}
+
+function triggerMutinerieSwitch() {
+  // If already in Mutinerie or splash is still showing, just set mode
+  if (mode === 'mutinerie') return;
+
+  showToast('LA MUTINERIE EST LANCEE ! Passage en mode danse...');
+
+  // If splash is still visible, auto-select mutinerie and start
+  var splash = document.getElementById('splash');
+  if (splash.style.display !== 'none') {
+    selectSplashMode('mutinerie');
+    setTimeout(startParty, 2000);
+    return;
+  }
+
+  // Switch live from Bardcore to Mutinerie
+  setTimeout(function() {
+    switchMode('mutinerie');
+  }, 2000);
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+
+// Volume slider gradient init
+document.getElementById('vol-slider').style.setProperty('--vol-pct', '80%');
+
+// Firebase init deferred until SDK loads
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>initFirebaseMutinyListener();</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
