@@ -1033,12 +1033,16 @@ function setVolume(val) {
 function seekFromClick(event) {
   if (appState === ST_IDLE || appState === ST_ENDED || appState === ST_CROSSFADING) return;
   var track = tracklist[currentIndex];
-  if (!track.endSeconds) return;
+  var endSec = track.endSeconds || 0;
+  if (endSec === 0) {
+    try { endSec = getActive().getDuration() || 0; } catch(e) {}
+  }
+  if (endSec === 0) return;
   var wrap = document.getElementById('progress-wrap');
   var rect = wrap.getBoundingClientRect();
   var ratio = Math.max(0, Math.min((event.clientX - rect.left) / rect.width, 1));
   var startSec = track.startSeconds || 0;
-  var targetTime = startSec + ratio * (track.endSeconds - startSec);
+  var targetTime = startSec + ratio * (endSec - startSec);
   try { getActive().seekTo(targetTime, true); } catch(e) {}
 }
 
