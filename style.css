@@ -421,6 +421,12 @@ select:focus {
     position: relative;
 }
 
+.mutiny-section.mutiny-locked {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: grayscale(0.8);
+}
+
 .mutiny-divider {
     display: flex;
     align-items: center;

@@ -70,9 +70,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Mutiny state (synced via Firebase when available, localStorage fallback)
     var mutinyVoters = [];
     var mutinyLaunched = false;
+    var mutinyUnlocked = false;
     var mutinyCount = 0;
     var firebaseReady = false;
     var mutinyDbRef = null;
+    var mutinyUnlockRef = null;
 
     // ── Firebase init ──
     function initFirebase() {
@@ -87,6 +89,13 @@ document.addEventListener('DOMContentLoaded', function () {
             firebase.auth().signInAnonymously().then(function () {
                 firebaseReady = true;
                 mutinyDbRef = firebase.database().ref('mutiny/voters');
+                mutinyUnlockRef = firebase.database().ref('mutiny/unlocked');
+
+                // Listen for unlock state
+                mutinyUnlockRef.on('value', function (snapshot) {
+                    mutinyUnlocked = snapshot.val() === true;
+                    updateMutinyLockState();
+                });
 
                 // Listen for real-time changes
                 mutinyDbRef.on('value', function (snapshot) {
@@ -517,12 +526,60 @@ document.addEventListener('DOMContentLoaded', function () {
         // Render crew roster
         renderCrewRoster();
 
+        // Apply lock state
+        updateMutinyLockState();
+
         // Determine current state
         if (mutinyLaunched) {
             showPostLaunchState();
         } else {
             updateMutinyButton();
         }
+    }
+
+    // ── Mutiny lock/unlock system ──
+    var mutinyOriginalSubtitle = 'Le capitaine est trop gourmand ? Rallie l\'equipage !';
+
+    function updateMutinyLockState() {
+        var section = document.getElementById('mutinySection');
+        if (!section) return;
+
+        if (mutinyLaunched || mutinyUnlocked) {
+            section.classList.remove('mutiny-locked');
+            if (!mutinyLaunched) {
+                mutinySubtitle.textContent = mutinyOriginalSubtitle;
+            }
+            return;
+        }
+
+        // Locked state
+        section.classList.add('mutiny-locked');
+        mutinySubtitle.textContent = 'Le capitaine surveille... patience.';
+    }
+
+    // Triple-tap skull to unlock (Nathan's secret)
+    var skullTapCount = 0;
+    var skullTapTimer = null;
+    var skullIcon = document.querySelector('.skull-icon');
+    if (skullIcon) {
+        skullIcon.addEventListener('click', function () {
+            skullTapCount++;
+            clearTimeout(skullTapTimer);
+            skullTapTimer = setTimeout(function () { skullTapCount = 0; }, 800);
+
+            if (skullTapCount >= 3) {
+                skullTapCount = 0;
+                // Unlock mutiny via Firebase
+                if (firebaseReady && mutinyUnlockRef) {
+                    mutinyUnlockRef.set(true);
+                    toast('Mutinerie deverrouillee !');
+                } else {
+                    mutinyUnlocked = true;
+                    updateMutinyLockState();
+                    toast('Mutinerie deverrouillee !');
+                }
+            }
+        });
     }
 
     // Called by Firebase onValue listener to refresh everything
@@ -621,6 +678,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function onMutiny() {
+        if (!mutinyUnlocked && !mutinyLaunched) return;
+
         if (!currentGuest) {
             toast('Choisis ton nom d\'abord !');
             return;
