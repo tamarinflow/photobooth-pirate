@@ -4,50 +4,57 @@
 
 // ══════════════════════════════════════
 // PROMPT ARCHITECTURE — Pirate Portraits
-// Consistent 17th-18th c. Dutch/Flemish oil painting style
-// across all guests, with per-character injection.
+// Character-first design: the pirate identity leads,
+// style wraps around it, face is preserved.
 // ══════════════════════════════════════
 
 function buildPiratePrompt(guest) {
-    var BASE_STYLE = [
-        'Oil portrait painting in the manner of 17th–18th century Dutch and Flemish maritime masters',
-        '(Rembrandt van Rijn, Frans Hals).',
-        'Three-quarter view composition, subject facing slightly left.',
-        'Single-source dramatic side lighting from upper left — strong chiaroscuro,',
-        'deep shadows on the right side of the face.',
-        'Rich dark background with distant stormy sea and ship rigging silhouette.',
-        'Color palette: deep burnt umber, ochre, tobacco brown, warm candlelight highlights on skin.',
-        'Cracked varnish texture suggesting a museum canvas aged 300 years.',
-        'Visible impasto brushwork on highlights, smooth glazes in shadows.'
-    ].join(' ');
-
-    var FACE_LOCK = [
-        'The subject\'s facial features are PRIMARY —',
-        'preserve exact face shape, eye shape, nose, jawline, and skin tone from the source photo.',
-        'This is a portrait of a specific real person; their face must remain clearly recognizable.',
-        'Only add period elements around and above the face. Do not alter facial structure.'
-    ].join(' ');
-
+    // ── 1. CHARACTER IDENTITY — the star of the portrait ──
     var character = (guest.characterPrompt) || (
-        'Subject is ' + guest.pirateName + ', legendary pirate. ' +
-        'Weathered determined expression. Tricorn hat, heavy coat, pistol at belt.'
+        'This is a legendary portrait of ' + guest.pirateName + ', notorious pirate. ' +
+        'Weathered determined expression. Armed and dangerous, dressed for the sea.'
     );
 
-    var QUALITY_LOCK = [
-        'Museum-quality oil portrait, highly detailed.',
-        'No cartoon, no illustration, no digital art style.',
-        'Subject fills 70% of frame. Sharp focus on eyes.'
+    // ── 2. FACE PRESERVATION — non-negotiable ──
+    var FACE_LOCK = [
+        'Preserve the exact facial features from the source photo:',
+        'face shape, eye shape, nose, mouth, jawline, and skin tone must remain clearly recognizable.',
+        'This is a portrait painted from a living person — their likeness is sacred.',
+        'Add pirate-era costume and setting around the person. Never alter the face itself.'
     ].join(' ');
 
-    return BASE_STYLE + ' ' + FACE_LOCK + ' ' + character + ' ' + QUALITY_LOCK;
+    // ── 3. PAINTERLY STYLE — pirate-era adventure painting ──
+    var STYLE = [
+        'Painted in the style of Golden Age of Piracy illustration —',
+        'rich oil painting with the adventure energy of Howard Pyle and N.C. Wyeth.',
+        'Dramatic portrait composition that adapts to the subject\'s natural pose.',
+        'Warm palette: lantern amber, deep ocean midnight blue, weathered wood brown,',
+        'tarnished gold, salt-bleached canvas white.',
+        'Textures of worn leather, frayed rope, cracked wood, sea-spray on metal.',
+        'Background suggests life at sea — ship deck, harbor at dusk, candlelit cabin, or open ocean.',
+        'Dramatic lighting from varied sources: swinging lantern, moonlight through rigging,',
+        'cannon fire glow, tavern fireplace — strong contrast, deep shadows.',
+        'Aged oil canvas feel with visible brushwork and warm varnish patina.'
+    ].join(' ');
+
+    // ── 4. QUALITY GUARDRAILS ──
+    var QUALITY = [
+        'Museum-quality oil painting, richly detailed.',
+        'Not a cartoon, not digital art, not a photograph.',
+        'Sharp focus on the eyes. Subject fills the frame.'
+    ].join(' ');
+
+    // Character leads, then face lock, then style, then quality
+    return character + ' ' + FACE_LOCK + ' ' + STYLE + ' ' + QUALITY;
 }
 
 var PIRATE_NEGATIVE_PROMPT = [
-    'cartoon, anime, illustration, digital painting, watercolor, sketch, pencil,',
-    '3D render, CGI, modern clothing, contemporary background,',
+    'cartoon, anime, comic book, digital painting, watercolor, sketch, pencil drawing,',
+    '3D render, CGI, video game, modern clothing, contemporary background,',
     'deformed face, altered facial proportions, two heads, extra limbs,',
-    'blurry face, generic face, replaced face, fantasy elements, magic,',
-    'neon colors, purple tones, oversaturated'
+    'blurry face, generic face, replaced face,',
+    'clean uniform, naval admiral, formal military portrait, stiff posed,',
+    'neon colors, purple gradient, oversaturated, fantasy magic effects'
 ].join(' ');
 
 document.addEventListener('DOMContentLoaded', function () {
