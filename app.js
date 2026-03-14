@@ -270,9 +270,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function callFalAI(imageDataUrl, guest) {
-        var apiKey = localStorage.getItem('fal_api_key') || '4eba0ada-6cfd-4c30-b2d5-a8750b37be66:328f2c46f5ceeba646031d7c75811b57';
+        // Key can be set via URL hash: #fal=YOUR_KEY (saves to localStorage)
+        var hashKey = window.location.hash.match(/fal=([^&]+)/);
+        if (hashKey) {
+            localStorage.setItem('fal_api_key', hashKey[1]);
+            history.replaceState(null, '', window.location.pathname);
+        }
+        var apiKey = localStorage.getItem('fal_api_key');
         if (!apiKey) {
-            throw new Error('Clé API Fal AI manquante');
+            throw new Error('Clé API Fal AI manquante — ouvre le lien de config');
         }
 
         var blob = dataUrlToBlob(imageDataUrl);
