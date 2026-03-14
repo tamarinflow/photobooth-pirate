@@ -405,26 +405,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── Download & Share ──
+    function getPirateFilename() {
+        return 'pirate-' + currentGuest.name.toLowerCase().replace(/[^a-z]/g, '') + '.jpg';
+    }
+
+    function getShareText() {
+        return '🏴‍☠️ Mon ancêtre pirate : ' + currentGuest.pirateName + ' !\n'
+            + '« ' + currentGuest.ancestorDesc + ' »\n'
+            + '🎉 Souvenir de la fête pirate du Capitaine Nathan — 14 mars 2026 ⚓';
+    }
+
+    function fetchPirateBlob() {
+        return fetch(resultPirate.src)
+            .then(function (r) { return r.blob(); })
+            .then(function (blob) {
+                return new File([blob], getPirateFilename(), { type: 'image/jpeg' });
+            });
+    }
+
     function onDownload() {
-        var img = resultPirate.src;
-        if (!img) return;
-        var a = document.createElement('a');
-        a.href = img;
-        a.download = 'pirate-' + currentGuest.name.toLowerCase() + '.jpg';
-        a.click();
+        if (!resultPirate.src) return;
+        fetchPirateBlob().then(function (file) {
+            var url = URL.createObjectURL(file);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = getPirateFilename();
+            a.click();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        }).catch(function () {
+            // Fallback: open image in new tab
+            window.open(resultPirate.src, '_blank');
+        });
     }
 
     function onShare() {
-        var text = 'Mon ancêtre pirate : ' + currentGuest.pirateName + ' 🏴‍☠️';
-        if (navigator.share) {
-            navigator.share({
-                title: text,
-                text: "J'ai découvert mon ancêtre pirate à l'anniversaire de Nathan !",
-                url: window.location.href
+        var text = getShareText();
+
+        if (navigator.share && navigator.canShare) {
+            fetchPirateBlob().then(function (file) {
+                var shareData = { text: text, files: [file] };
+                if (navigator.canShare(shareData)) {
+                    return navigator.share(shareData);
+                }
+                // Fallback: share without image
+                return navigator.share({ title: currentGuest.pirateName, text: text });
             }).catch(function () {});
+        } else if (navigator.share) {
+            navigator.share({ title: currentGuest.pirateName, text: text }).catch(function () {});
         } else {
-            navigator.clipboard.writeText(text + ' ' + window.location.href)
-                .then(function () { toast('Copié !'); });
+            navigator.clipboard.writeText(text)
+                .then(function () { toast('Message copié !'); });
         }
     }
 
