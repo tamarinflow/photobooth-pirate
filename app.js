@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function callFalAI(imageDataUrl, guest) {
-        var apiKey = localStorage.getItem('fal_api_key');
+        var apiKey = localStorage.getItem('fal_api_key') || '4eba0ada-6cfd-4c30-b2d5-a8750b37be66:328f2c46f5ceeba646031d7c75811b57';
         if (!apiKey) {
             throw new Error('Clé API Fal AI manquante');
         }
