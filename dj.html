@@ -900,6 +900,12 @@ function tick() {
   var endSec      = track.endSeconds || 0;
   var fadeOutDur  = track.fadeOutDuration || 0;
   var fadeInDur   = track.fadeInDuration || 0;
+
+  // For tracks without endSeconds (bardcore), use YouTube's actual duration
+  if (endSec === 0) {
+    try { endSec = p.getDuration() || 0; } catch(e) {}
+  }
+
   var effectiveEnd = (endSec > 0) ? endSec : Infinity;
   var fadeOutStart = effectiveEnd - fadeOutDur;
 
