@@ -678,6 +678,9 @@ var masterVolume = 80;
 
 var crossfadeStartTime = null;
 var crossfadeDuration  = 0;
+var crossfadeFadeOutMs = 0;
+var crossfadeFadeInMs  = 0;
+var crossfadeRAF = null;
 
 var preloaded = false;
 var bardcoreGapTimer = null;
@@ -766,11 +769,12 @@ function swapPlayers() { activePlayer = (activePlayer === 'a') ? 'b' : 'a'; }
 
 function setPlayerVol(player, vol) {
   if (!player) return;
-  try { player.setVolume(vol); } catch(e) {}
+  try { player.setVolume(Math.round(Math.max(0, Math.min(100, vol)))); } catch(e) {}
 }
 
 function stopAll() {
   clearTimeout(bardcoreGapTimer);
+  if (crossfadeRAF) { cancelAnimationFrame(crossfadeRAF); crossfadeRAF = null; }
   crossfadeStartTime = null;
   preloaded = false;
   appState = ST_IDLE;
@@ -934,10 +938,8 @@ function tick() {
     // Begin crossfade
     if (fadeOutDur > 0 && currentTime >= fadeOutStart && currentIndex < tracklist.length - 1) {
       beginCrossfade(fadeOutDur, fadeInDur);
-    }
-
-    // Hard stop past end
-    if (effectiveEnd !== Infinity && currentTime >= effectiveEnd) {
+    } else if (effectiveEnd !== Infinity && currentTime >= effectiveEnd) {
+      // Hard stop only if crossfade did not start
       if (currentIndex < tracklist.length - 1) {
         nextTrack();
       } else {
@@ -955,9 +957,7 @@ function tick() {
     }
   }
 
-  if (appState === ST_CROSSFADING) {
-    tickCrossfade();
-  }
+  // Crossfade ticking is now handled by requestAnimationFrame, not here
 }
 
 // ─── CROSSFADE ────────────────────────────────────────────────────────────────
@@ -966,7 +966,9 @@ function beginCrossfade(fadeOutDur, fadeInDur) {
   if (appState === ST_CROSSFADING) return;
   appState = ST_CROSSFADING;
   crossfadeStartTime = Date.now();
-  crossfadeDuration = Math.max(fadeOutDur, fadeInDur, 1) * 1000;
+  crossfadeFadeOutMs = fadeOutDur * 1000;
+  crossfadeFadeInMs  = fadeInDur * 1000;
+  crossfadeDuration  = Math.max(crossfadeFadeOutMs, crossfadeFadeInMs, 1000);
   document.getElementById('cf-indicator').classList.add('active');
 
   var incoming = getInactive();
@@ -974,25 +976,42 @@ function beginCrossfade(fadeOutDur, fadeInDur) {
     incoming.playVideo();
     setPlayerVol(incoming, 0);
   } catch(e) {}
+
+  // Use requestAnimationFrame for smooth volume curves (~60fps)
+  function crossfadeLoop() {
+    tickCrossfade();
+    if (appState === ST_CROSSFADING) {
+      crossfadeRAF = requestAnimationFrame(crossfadeLoop);
+    }
+  }
+  crossfadeRAF = requestAnimationFrame(crossfadeLoop);
 }
 
 function tickCrossfade() {
   if (!crossfadeStartTime) return;
 
   var elapsed = Date.now() - crossfadeStartTime;
-  var ratio   = Math.min(elapsed / crossfadeDuration, 1.0);
 
-  // Equal-power crossfade
-  var volIn  = Math.sin(ratio * Math.PI / 2) * masterVolume;
-  var volOut = Math.cos(ratio * Math.PI / 2) * masterVolume;
+  // Independent fade durations for asymmetric crossfades
+  var ratioOut = Math.min(elapsed / crossfadeFadeOutMs, 1.0);
+  var ratioIn  = Math.min(elapsed / crossfadeFadeInMs, 1.0);
+
+  // Equal-power crossfade with independent curves
+  var volOut = Math.cos(ratioOut * Math.PI / 2) * masterVolume;
+  var volIn  = Math.sin(ratioIn  * Math.PI / 2) * masterVolume;
 
   setPlayerVol(getActive(),   volOut);
   setPlayerVol(getInactive(), volIn);
 
-  if (ratio >= 1.0) {
+  var overallRatio = Math.min(elapsed / crossfadeDuration, 1.0);
+  if (overallRatio >= 1.0) {
+    if (crossfadeRAF) { cancelAnimationFrame(crossfadeRAF); crossfadeRAF = null; }
+
     var outgoing = getActive();
-    try { outgoing.stopVideo(); } catch(e) {}
+    try { outgoing.pauseVideo(); } catch(e) {}
     setPlayerVol(outgoing, 0);
+    // Clean up paused player after 15s
+    setTimeout(function() { try { outgoing.stopVideo(); } catch(e) {} }, 15000);
 
     swapPlayers();
     setPlayerVol(getActive(), masterVolume);
